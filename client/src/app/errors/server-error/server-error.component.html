@@ -1,0 +1,15 @@
+<h4>Internal Server error - Refreshing page will lose this page!</h4>
+<ng-container *ngIf="error">
+    <h5 class="text-danger">Error: {{error.message}}</h5>
+    <p class="font-weight-bold">Note: If you are seeing this, then client side is probably not to blame.</p>
+    <p>What to do next?</p>
+    <ol>
+        <li>Open Chrome DEV tool</li>
+        <li>Inspect Network tab</li>
+        <li>Check failing requests</li>
+        <li>Examine the request URL - make sure it is correct</li>
+        <li>Reproduce the error in Postman with request URL - If the same response appears, then the issue is not on client side, go to check server side</li>
+    </ol>
+    <p>Following is Stack trace - this is where your investigation should start!</p>
+    <code class="mt-5" style="background-color: whitesmoke;">{{error.details}}</code>
+</ng-container>

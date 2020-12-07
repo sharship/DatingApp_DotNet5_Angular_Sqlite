@@ -12,7 +12,7 @@ export class NavComponent implements OnInit {
   model: any = {};
   // currentUser$: Observable<User>;
 
-  constructor(public accountService: AccountService, private router: Router, private toastr: ToastrService) { }
+  constructor(public accountService: AccountService, private router: Router) { }
 
   ngOnInit(): void {
     // this.currentUser$ = this.accountService.currentUser$;
@@ -21,7 +21,7 @@ export class NavComponent implements OnInit {
   login() {
     this.accountService.login(this.model)
       .subscribe(
-        respoonse => {
+        () => {
           this.router.navigateByUrl('/members')
         }
       );

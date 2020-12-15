@@ -10,6 +10,7 @@ namespace API.Helpers
     {
         public AutoMapperProfiles()
         {
+            CreateMap<MemberUpdateDto, AppUser>();
             CreateMap<AppUser, MemberDto>()
                 .ForMember(
                     dest => dest.PhotoUrl, 

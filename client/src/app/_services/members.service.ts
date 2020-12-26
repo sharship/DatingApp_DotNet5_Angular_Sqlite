@@ -14,6 +14,14 @@ export class MembersService {
   baseUrl = environment.apiUrl;
   constructor(private http: HttpClient) { }
 
+  deletePhoto(photoId: number) {
+    return this.http.delete(this.baseUrl + 'users/delete-photo/' + photoId);
+  }
+
+  setMainPhoto(photoId: number) {
+    return this.http.put(this.baseUrl + 'users/set-main-photo/' + photoId, {});
+  }
+
   updateMember(member: Member) {
     return this.http.put(this.baseUrl + 'users', member)
       .pipe(

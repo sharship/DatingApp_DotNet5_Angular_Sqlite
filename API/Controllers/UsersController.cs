@@ -1,5 +1,4 @@
 using System.Linq;
-using System.Security.Claims;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using API.DTOs;
@@ -10,6 +9,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Http;
 using API.Extensions;
 using API.Entities;
+using API.Helpers;
 
 namespace API.Controllers
 {
@@ -128,14 +128,22 @@ namespace API.Controllers
         }
 
         [HttpGet]
-        public async Task<ActionResult<IEnumerable<MemberDto>>> GetUers()
+        public async Task<ActionResult<IEnumerable<MemberDto>>> GetUers([FromQuery] UserParams userParams)
         {
-            // var users = await _userRepository.GetUsersAsync();
-            // var usersToReturn = _mapper.Map<IEnumerable<MemberDto>>(users);
+            var user = await _userRepository.GetUserByUsernameAsync(User.GetUsername());  // get current user, User?
+            userParams.CurrentUsername = user.UserName;
 
-            var usersToReturn = await _userRepository.GetMembersAsync();
+            if (string.IsNullOrEmpty(userParams.Gender))
+            {
+                userParams.Gender = user.Gender == "male" ? "female" : "male";
+            }
 
-            return Ok(usersToReturn);
+            var users = await _userRepository.GetMembersAsync(userParams);
+
+            // add Pagination info to response header
+            Response.AddPaginationHeader(users.CurrentPage, users.PageSize, users.TotalCount, users.TotalPages);
+            // PagedList<T> : List<T> : IEnumerable<T>, polyphorism
+            return Ok(users);
         }
 
 

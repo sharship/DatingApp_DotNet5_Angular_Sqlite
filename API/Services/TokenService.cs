@@ -13,10 +13,12 @@ namespace API.Services
     public class TokenService : ITokenService
     {
         private readonly SymmetricSecurityKey _key; // for JWT key
+
         public TokenService(IConfiguration config)
         {
             _key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(config["TokenKey"]));
         }
+
         public string CreateToken(AppUser user)
         {
             var claims = new List<Claim>
@@ -27,6 +29,7 @@ namespace API.Services
 
             var creds = new SigningCredentials(_key, SecurityAlgorithms.HmacSha512Signature);
 
+            // Build token descriptor based on claims and credentials
             var tokenDescriptor = new SecurityTokenDescriptor
             {
                 Subject = new ClaimsIdentity(claims),
@@ -35,6 +38,8 @@ namespace API.Services
             };
 
             var tokenHandler = new JwtSecurityTokenHandler();
+
+            // Create a token based on token handler and decriptor
             var token = tokenHandler.CreateToken(tokenDescriptor);
 
             return tokenHandler.WriteToken(token);

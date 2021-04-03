@@ -14,8 +14,12 @@ namespace API.Data
 {
     public class UserRepository : IUserRepository
     {
+
+        #region Private Fields
         private readonly DataContext _context;
-        private readonly IMapper _mapper;
+        private readonly IMapper _mapper;            
+        #endregion
+
         public UserRepository(DataContext context, IMapper mapper)
         {
             _mapper = mapper;

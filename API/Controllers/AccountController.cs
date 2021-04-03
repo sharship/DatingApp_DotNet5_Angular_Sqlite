@@ -14,9 +14,13 @@ namespace API.Controllers
 {
     public class AccountController : BaseApiController
     {
+        
+        #region Private Fields
         private readonly DataContext _context;
         private readonly ITokenService _tokenService;
-        private readonly IMapper _mapper;
+        private readonly IMapper _mapper;            
+        #endregion
+
         public AccountController(DataContext context, ITokenService tokenService, IMapper mapper)
         {
             _mapper = mapper;

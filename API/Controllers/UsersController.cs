@@ -16,9 +16,13 @@ namespace API.Controllers
     [Authorize]
     public class UsersController : BaseApiController
     {
+
+        #region Private Fields
         private readonly IUserRepository _userRepository;
         private readonly IMapper _mapper;
-        private readonly IPhotoService _photoService;
+        private readonly IPhotoService _photoService;            
+        #endregion
+
         public UsersController(IUserRepository userRepository, IMapper mapper, IPhotoService photoService)
         {
             _photoService = photoService;
@@ -86,7 +90,7 @@ namespace API.Controllers
                 return BadRequest(result.Error.Message);
             
 
-            // after success to upload photo to cloudinary, and get result back to api
+            // after success to upload photo to cloudinary, build new Photo instance based on feedback from Cloudinary
             var photo = new Photo {
                 Url = result.SecureUrl.AbsoluteUri,
                 PublicId = result.PublicId
@@ -99,6 +103,7 @@ namespace API.Controllers
                 photo.IsMain = true;
             }
 
+            // bundle User and Phote Model together
             user.Photos.Add(photo);
 
             if (await _userRepository.SaveAllAsync())
@@ -142,7 +147,7 @@ namespace API.Controllers
 
             // add Pagination info to response header
             Response.AddPaginationHeader(users.CurrentPage, users.PageSize, users.TotalCount, users.TotalPages);
-            // PagedList<T> : List<T> : IEnumerable<T>, polyphorism
+
             return Ok(users);
         }
 

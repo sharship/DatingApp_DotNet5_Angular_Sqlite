@@ -10,9 +10,11 @@ namespace API.Middlewares
 {
     public class ExceptionMiddleware
     {
+        #region Private Fields
         private readonly RequestDelegate _next;
         private readonly ILogger<ExceptionMiddleware> _logger;
         private readonly IHostEnvironment _env;
+        #endregion
 
         public ExceptionMiddleware(RequestDelegate next, ILogger<ExceptionMiddleware> logger, IHostEnvironment env)
         {
@@ -31,19 +33,24 @@ namespace API.Middlewares
             {
                 //  log error in console
                 _logger.LogError(ex, ex.Message);
-                // construct response
+
+                #region  construct response and send back to HTTP
                 context.Response.ContentType = "application/json";
-                context.Response.StatusCode = (int) HttpStatusCode.InternalServerError;
+                context.Response.StatusCode = (int)HttpStatusCode.InternalServerError;
 
-                var response = _env.IsDevelopment() ? new ApiException(context.Response.StatusCode, ex.Message, ex.StackTrace?.ToString()) : new ApiException(context.Response.StatusCode, "Internal Server Error");
+                #region Contruct Exception response in Json format
+                var apiException = _env.IsDevelopment() ? new ApiException(context.Response.StatusCode, ex.Message, ex.StackTrace?.ToString()) : new ApiException(context.Response.StatusCode, "Internal Server Error");
 
-                // construct response options
-                var options = new JsonSerializerOptions{PropertyNamingPolicy= JsonNamingPolicy.CamelCase};
+                // construct ApiException options
+                var options = new JsonSerializerOptions { PropertyNamingPolicy = JsonNamingPolicy.CamelCase };
 
-                // serialize response to json
-                var json = JsonSerializer.Serialize(response, options);
+                // serialize ApiException to json
+                var jsonExceptionResponse = JsonSerializer.Serialize(apiException, options);
+                #endregion
 
-                await context.Response.WriteAsync(json);
+
+                await context.Response.WriteAsync(jsonExceptionResponse);
+                #endregion
             }
         }
     }

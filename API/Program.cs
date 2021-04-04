@@ -20,7 +20,7 @@ namespace API
 
             try
             {
-                // get DBContext and seed data
+                // get DBContext and seed user data
                 var context = services.GetRequiredService<DataContext>();
                 await context.Database.MigrateAsync();
                 await Seed.SeedUsersAsync(context);

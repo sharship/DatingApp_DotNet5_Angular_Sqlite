@@ -21,6 +21,8 @@ namespace API.Services
 
         public string CreateToken(AppUser user)
         {
+
+            #region Build token descriptor: based on claims and credentials
             var claims = new List<Claim>
             {
                 new Claim(JwtRegisteredClaimNames.NameId, user.Id.ToString()),
@@ -29,18 +31,20 @@ namespace API.Services
 
             var creds = new SigningCredentials(_key, SecurityAlgorithms.HmacSha512Signature);
 
-            // Build token descriptor based on claims and credentials
             var tokenDescriptor = new SecurityTokenDescriptor
             {
                 Subject = new ClaimsIdentity(claims),
                 Expires = DateTime.Now.AddDays(7),
                 SigningCredentials = creds
-            };
+            };                
+            #endregion
 
+            #region Create a token: based on token handler and decriptor
             var tokenHandler = new JwtSecurityTokenHandler();
 
-            // Create a token based on token handler and decriptor
-            var token = tokenHandler.CreateToken(tokenDescriptor);
+            var token = tokenHandler.CreateToken(tokenDescriptor);                
+            #endregion
+
 
             return tokenHandler.WriteToken(token);
         }

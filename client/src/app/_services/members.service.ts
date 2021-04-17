@@ -27,6 +27,22 @@ export class MembersService {
     });
   }
 
+  // Likes related functions Start ---------------------------------
+  addLike(username: string) {
+    return this.http.post(this.baseUrl + 'likes/' + username, {});
+  }
+
+  getLikes(predicate: string, pageNumber, pageSize) {
+    // construct pagination header
+    let params = this.getPaginationHeaders(pageNumber, pageSize);
+    params = params.append('predicate', predicate);
+
+    return this.getPaginatedResult<Partial<Member[]>>(this.baseUrl + 'likes', params);
+  }
+  // Likes related functions End ---------------------------------
+
+
+
   getUserParams() {
     return this.userParams;
   }

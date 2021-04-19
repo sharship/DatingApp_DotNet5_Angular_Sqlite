@@ -13,12 +13,12 @@ namespace API.Controllers
     [Authorize]
     public class LikesController : BaseApiController
     {
-        private readonly ILikesRepository _likesReposity;
+        private readonly ILikesRepository _likesrepository;
         private readonly IUserRepository _userRepository;
-        public LikesController(IUserRepository userRepository, ILikesRepository likesReposity)
+        public LikesController(IUserRepository userRepository, ILikesRepository likesrepository)
         {
             _userRepository = userRepository;
-            _likesReposity = likesReposity;
+            _likesrepository = likesrepository;
         }
 
         [HttpPost("{followingName}")]
@@ -26,7 +26,7 @@ namespace API.Controllers
         {
 
             var sourceUserId = User.GetUserId();
-            var sourceUser = await _likesReposity.GetUserWithLikes(sourceUserId);
+            var sourceUser = await _likesrepository.GetUserWithLikes(sourceUserId);
 
             var followingUser = await _userRepository.GetUserByUsernameAsync(followingName);
 
@@ -42,7 +42,7 @@ namespace API.Controllers
             }
 
 
-            var existingUserLike = _likesReposity.GetUserLike(sourceUserId, followingUser.Id);
+            var existingUserLike = await _likesrepository.GetUserLike(sourceUserId, followingUser.Id);
             if (existingUserLike != null)
             {
                 return BadRequest("You already followed this user.");
@@ -71,7 +71,7 @@ namespace API.Controllers
         public async Task<ActionResult<IEnumerable<LikeDto>>> GetUserLikes([FromQuery]LikesParams likesParams)
         {
             likesParams.UserId = User.GetUserId();
-            var users = await _likesReposity.GetUserLikes(likesParams);
+            var users = await _likesrepository.GetUserLikes(likesParams);
 
             Response.AddPaginationHeader(users.CurrentPage, users.PageSize, users.TotalCount, users.TotalPages);
 

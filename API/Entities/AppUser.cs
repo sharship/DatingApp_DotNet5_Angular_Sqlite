@@ -23,12 +23,17 @@ namespace API.Entities
 
         public ICollection<Photo> Photos { get; set; }
         
-        // LikedByUsers
+        #region Like functionality
         public ICollection<UserLike> Followers { get; set; }
+        public ICollection<UserLike> Followings { get; set; }            
+        #endregion
+
+        #region Message functionality
+        public ICollection<Message> MessagesSent { get; set; }
         
-        // LikedUsers
-        public ICollection<UserLike> Followings { get; set; }
+        public ICollection<Message> MessagesReceived { get; set; }
         
+        #endregion
         
     }
 }

@@ -28,6 +28,7 @@ import { TextInputComponent } from './_forms/text-input/text-input.component';
 import { DateInputComponent } from './_forms/date-input/date-input.component';
 import { RouterModule } from '@angular/router';
 import { CommonModule } from '@angular/common';
+import { MemberMessageThreadComponent } from './members/member-message-thread/member-message-thread.component';
 
 @NgModule({
   declarations: [
@@ -46,7 +47,8 @@ import { CommonModule } from '@angular/common';
     MemberEditComponent,
     PhotoEditorComponent,
     TextInputComponent,
-    DateInputComponent
+    DateInputComponent,
+    MemberMessageThreadComponent
   ],
   imports: [
     BrowserModule,

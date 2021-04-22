@@ -1,9 +1,11 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, ViewChild } from '@angular/core';
 import { ActivatedRoute } from '@angular/router';
 import { NgxGalleryAnimation, NgxGalleryImage, NgxGalleryOptions } from '@kolkov/ngx-gallery';
-import { off } from 'process';
+import { TabDirective, TabsetComponent } from 'ngx-bootstrap/tabs';
 import { Member } from 'src/app/_models/member';
+import { Message } from 'src/app/_models/message';
 import { MembersService } from 'src/app/_services/members.service';
+import { MessageService } from 'src/app/_services/message.service';
 
 @Component({
   selector: 'app-member-detail',
@@ -12,23 +14,44 @@ import { MembersService } from 'src/app/_services/members.service';
 })
 export class MemberDetailComponent implements OnInit {
 
+  // Tab function related
+  // template reference variable
+  @ViewChild('memberTabs', {static: true}) memberTabs: TabsetComponent; // access specific template element
+  activeTab: TabDirective; // access tab element
+
+  // photo function related
   galleryOptions: NgxGalleryOptions[];
   galleryImages: NgxGalleryImage[];
-  
+
+  // Outputs
   member: Member;
-  constructor(private memberService: MembersService, private route: ActivatedRoute) { }
+  messages: Message[] = [];
+
+  constructor(private memberService: MembersService, private route: ActivatedRoute, private messageService: MessageService) { }
 
   ngOnInit(): void {
     // this.getDrilledUsername();
-    this.loadMember();
+    
+    this.route.data.subscribe(
+      data => {
+        this.member = data.memberDataResolver;
+      }
+    );
+    
+    this.selectTabByParams();
+
+    this.setPhotoGallery();
   }
 
-  loadMember() {
-    this.memberService.getMemberByUsername(this.route.snapshot.paramMap.get('username')).subscribe(data => {
-      this.member = data,
-      this.setPhotoGallery();
-    })
-  }
+  // Basic CRUD API methods:
+  // Get member
+  // loadMember() {
+  //   this.memberService.getMemberByUsername(this.route.snapshot.paramMap.get('username')).subscribe(
+  //     data => {
+  //       this.member = data;
+        
+  //   })
+  // }
 
   getDrilledUsername() {
     let uuname = this.route.snapshot.paramMap.get('username');
@@ -37,7 +60,7 @@ export class MemberDetailComponent implements OnInit {
 
   getImages(): NgxGalleryImage[] {
     const imageUrls = [];
-    for(const photo of this.member.photos) {
+    for (const photo of this.member.photos) {
       imageUrls.push(
         {
           small: photo?.url,
@@ -63,6 +86,39 @@ export class MemberDetailComponent implements OnInit {
     ];
 
     this.galleryImages = this.getImages();
+  }
+
+  // Functional methods:
+  // message tab related
+
+  // Get message thread from service
+  loadMessageThread() {
+    this.messageService.getMessageThread(this.member.username).subscribe(
+      response => {
+        this.messages = response;
+      }
+    );
+  }
+
+  onTabActivated(data: TabDirective) {
+    this.activeTab = data;
+    if (this.activeTab.heading === "Messages" && this.messages.length === 0) {
+      this.loadMessageThread();
+    }
+  }
+
+  selectTab(tabId: number) {
+    this.memberTabs.tabs[tabId].active = true;
+  }
+
+  selectTabByParams() {
+
+    // select tab based on query params
+    this.route.queryParams.subscribe(
+      params => {
+        params.tab ? this.selectTab(params.tab) : this.selectTab(0);
+      }
+    );
   }
 
 }

@@ -22,21 +22,28 @@ namespace API.Data
             _context = context;
         }
 
+        // Create basic
         public void AddMessage(Message message)
         {
             _context.Messages.Add(message);
         }
 
+        // Delete basic
         public void DeleteMessage(Message message)
         {
             _context.Messages.Remove(message);
         }
 
+        // Read basic
         public async Task<Message> GetMessage(int id)
         {
-            return await _context.Messages.FindAsync(id);
+            return await _context.Messages
+                .Include(m => m.Sender)
+                .Include(m => m.Recipient)
+                .SingleOrDefaultAsync(m => m.Id == id);
         }
 
+        // Read specific messages, to support fuctionality
         public async Task<PagedList<MessageDto>> GetMessagesForCurrentUser(MessageParams messageParams)
         {
             // get IQueryable<Message>
@@ -47,16 +54,26 @@ namespace API.Data
             switch (messageParams.Container)
             {
                 case "Inbox":
-                    messageQuery = messageQuery.Where(m => m.RecipientUsername == messageParams.CurrentUsername);
+                    messageQuery = messageQuery.Where(m => 
+                        m.RecipientUsername == messageParams.CurrentUsername
+                        && m.RecipientDeleted == false
+                    );
                     break;
                 
                 case "Outbox":
-                    messageQuery = messageQuery.Where(m => m.SenderUsername == messageParams.CurrentUsername);
+                    messageQuery = messageQuery.Where(m => 
+                        m.SenderUsername == messageParams.CurrentUsername
+                        && m.SenderDeleted == false
+                    );
                     break;
 
                 default:
                 // Unread
-                    messageQuery = messageQuery.Where(m => m.RecipientUsername == messageParams.CurrentUsername && m.DateTimeRead == null);
+                    messageQuery = messageQuery.Where(m => 
+                        m.RecipientUsername == messageParams.CurrentUsername 
+                        && m.DateTimeRead == null
+                        && m.RecipientDeleted == false
+                    );
                     break;
             };
 
@@ -67,9 +84,8 @@ namespace API.Data
             return await PagedList<MessageDto>.CreateAsync(messageDtos, messageParams.PageNumber, messageParams.PageSize);
             
         }
-
-        
-        
+      
+        // Read message thread, to support fuctionality
         public async Task<IEnumerable<MessageDto>> GetMessageThread(string currentUsername, string recipientUsername)
         {
             // 1. get messages from both sides of conversation
@@ -77,9 +93,13 @@ namespace API.Data
                 .Include(m => m.Sender).ThenInclude(s => s.Photos)
                 .Include(m => m.Recipient).ThenInclude(r => r.Photos)
                 .Where( m =>
+                    // current use is sender
                     m.Sender.UserName == currentUsername && m.Recipient.UserName == recipientUsername
+                    && m.SenderDeleted == false
                     ||
+                    // current user is recipient
                     m.Recipient.UserName == currentUsername && m.Sender.UserName == recipientUsername
+                    && m.RecipientDeleted == false
                 )
                 .OrderBy(m => m.DateTimeSent)
                 .ToListAsync();

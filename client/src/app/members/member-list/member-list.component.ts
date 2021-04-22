@@ -13,8 +13,11 @@ import { MembersService } from 'src/app/_services/members.service';
 export class MemberListComponent implements OnInit {
 
   // members$ : Observable<Member[]>;
+  // Outputs:
   members: Member[];
   pagination: Pagination;
+
+  // Inputs:
   userParams: UserParams;
   user: User;
   genderList = [

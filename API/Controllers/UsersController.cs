@@ -132,6 +132,7 @@ namespace API.Controllers
             return BadRequest("Failed to update user.");
         }
 
+
         [HttpGet]
         public async Task<ActionResult<IEnumerable<MemberDto>>> GetUers([FromQuery] UserParams userParams)
         {

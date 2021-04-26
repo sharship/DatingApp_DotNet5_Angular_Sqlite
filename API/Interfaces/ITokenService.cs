@@ -1,10 +1,11 @@
 using System;
+using System.Threading.Tasks;
 using API.Entities;
 
 namespace API.Interfaces
 {
     public interface ITokenService
     {
-        String CreateToken(AppUser user);
+        Task<String> CreateTokenAsync(AppUser user);
     }
 }

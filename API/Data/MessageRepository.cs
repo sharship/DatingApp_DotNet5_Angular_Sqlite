@@ -77,7 +77,7 @@ namespace API.Data
                     break;
             };
 
-            // execute IQueryable<Message>, and then project to MessageDto
+            // execute IQueryable<Message>, and then project to IQueryable<MessageDto>
             var messageDtos = messageQuery.ProjectTo<MessageDto>(_mapper.ConfigurationProvider);
 
             // create paged list

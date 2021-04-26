@@ -1,38 +1,68 @@
-
-using System.Text;
-using System.Security.Cryptography;
+using System;
 using System.Collections.Generic;
 using System.Text.Json;
 using System.Threading.Tasks;
 using API.Entities;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.AspNetCore.Identity;
 
 namespace API.Data
 {
     public class Seed
     {
-        public static async Task SeedUsersAsync(DataContext context)
+        public static async Task SeedUsersAsync(UserManager<AppUser> userManager, RoleManager<AppRole> roleManager)
         {
-            if(await context.Users.AnyAsync()) return;
+            if(await userManager.Users.AnyAsync()) return;
 
+            #region seed roles
+            var roles = new List<AppRole>
+            {
+                new AppRole { Name = "Member" },
+                new AppRole { Name = "Admin" },
+                new AppRole { Name = "Moderator" },
+            };
+
+            foreach (var role in roles)
+            {
+                await roleManager.CreateAsync(role);
+            }
+
+            #endregion
+
+
+            #region seed users
             // get list of users to seed into DB
             var userRawData = await System.IO.File.ReadAllTextAsync("Data/UserSeedData.json");
             var users = JsonSerializer.Deserialize<List<AppUser>>(userRawData);
 
             if(users == null) return;
-            // create password and salt for each user, and add them to DBContext one by one
+
+            
             foreach (var user in users)
             {
-                using var hmac = new HMACSHA512();
-
                 user.UserName = user.UserName.ToLower();
-                user.PasswordSalt = hmac.Key;
-                user.PasswordHash = hmac.ComputeHash(Encoding.UTF8.GetBytes("P@ssword"));
 
-                await context.Users.AddAsync(user);
+                // add password for each user, and add them to DBContext one by one
+                await userManager.CreateAsync(user, "P@ssw0rd");
+
+                // add current user to named role
+                await userManager.AddToRoleAsync(user, "Member");
             }
 
-            await context.SaveChangesAsync();
+            #endregion
+
+
+            #region seed admin
+            var admin = new AppUser
+            {
+                UserName = "admin",
+            };
+
+            await userManager.CreateAsync(admin, "P@ssw0rd");
+            await userManager.AddToRolesAsync(admin, new List<string> { "Admin", "Moderator" });
+            
+            #endregion
+            
         }
     }
 }

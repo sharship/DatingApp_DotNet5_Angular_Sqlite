@@ -1,6 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 import { Router } from '@angular/router';
 import { ToastrService } from 'ngx-toastr';
+import { map, take } from 'rxjs/operators';
 import { AccountService } from '../_services/account.service';
 
 @Component({
@@ -31,5 +32,14 @@ export class NavComponent implements OnInit {
     this.accountService.logout();
     this.router.navigateByUrl('/');
   }
+
+  // showAdmin() {
+  //   this.accountService.currentUser$.pipe(take(1))
+  //     .subscribe(user => {
+  //       return user.roles.some(role => {
+  //         role.includes("Admin") || role.includes("Moderator");
+  //       })
+  //     })
+  // }
 
 }

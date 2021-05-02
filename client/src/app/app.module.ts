@@ -29,6 +29,12 @@ import { DateInputComponent } from './_forms/date-input/date-input.component';
 import { RouterModule } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import { MemberMessageThreadComponent } from './members/member-message-thread/member-message-thread.component';
+import { AdminPanelComponent } from './admin/admin-panel/admin-panel.component';
+import { HasRoleDirective } from './_directives/has-role.directive';
+import { UserManagementComponent } from './admin/user-management/user-management.component';
+import { PhotoManagementComponent } from './admin/photo-management/photo-management.component';
+import { RolesModalComponent } from './modals/roles-modal/roles-modal.component';
+
 
 @NgModule({
   declarations: [
@@ -48,7 +54,12 @@ import { MemberMessageThreadComponent } from './members/member-message-thread/me
     PhotoEditorComponent,
     TextInputComponent,
     DateInputComponent,
-    MemberMessageThreadComponent
+    MemberMessageThreadComponent,
+    AdminPanelComponent,
+    HasRoleDirective,
+    UserManagementComponent,
+    PhotoManagementComponent,
+    RolesModalComponent
   ],
   imports: [
     BrowserModule,

@@ -1,3 +1,4 @@
+using System.Threading.Tasks;
 using System.Text;
 using API.Data;
 using API.Entities;
@@ -43,6 +44,23 @@ namespace API.Extensions
 
                         ValidateIssuer = false,  // back-end API server
                         ValidateAudience = false,  // front-end Angular
+                    };
+
+                    // config how to authenticate SignalR websocket token in request query parameter
+                    options.Events = new JwtBearerEvents
+                    {
+                        OnMessageReceived = (context) =>
+                        {
+                            var accessToken = context.Request.Query["access_token"];
+                            var path = context.HttpContext.Request.Path;
+
+                            if (path.StartsWithSegments("/hubs") && !string.IsNullOrEmpty(accessToken))
+                            {
+                                context.Token = accessToken;
+                            }
+
+                            return Task.CompletedTask;
+                        }
                     };
                 });
             #endregion

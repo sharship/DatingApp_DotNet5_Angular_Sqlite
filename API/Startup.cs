@@ -6,6 +6,7 @@ using Microsoft.Extensions.Hosting;
 using Microsoft.OpenApi.Models;
 using API.Extensions;
 using API.Middlewares;
+using API.SignalR;
 
 namespace API
 {
@@ -20,6 +21,8 @@ namespace API
         // This method gets called by the runtime. Use this method to add services to the container.
         public void ConfigureServices(IServiceCollection services)
         {
+            services.AddSignalR();
+
             services.AddApplicationServices(_config);
             services.AddIdentityServices(_config);
             
@@ -43,9 +46,10 @@ namespace API
             app.UseRouting();
 
             app.UseCors(
-                policy => policy
+                policyBuilder => policyBuilder
                     .AllowAnyHeader()
                     .AllowAnyMethod()
+                    .AllowCredentials()
                     .WithOrigins("https://localhost:4200")
             );
             
@@ -55,6 +59,7 @@ namespace API
             app.UseEndpoints(endpoints =>
             {
                 endpoints.MapControllers();
+                endpoints.MapHub<PresenceHub>("hubs/presence");
             });
         }
     }

@@ -1,9 +1,12 @@
-import { Component, OnInit, ViewChild } from '@angular/core';
+import { Component, OnDestroy, OnInit, ViewChild } from '@angular/core';
 import { ActivatedRoute } from '@angular/router';
 import { NgxGalleryAnimation, NgxGalleryImage, NgxGalleryOptions } from '@kolkov/ngx-gallery';
 import { TabDirective, TabsetComponent } from 'ngx-bootstrap/tabs';
+import { take } from 'rxjs/operators';
 import { Member } from 'src/app/_models/member';
 import { Message } from 'src/app/_models/message';
+import { User } from 'src/app/_models/user';
+import { AccountService } from 'src/app/_services/account.service';
 import { MembersService } from 'src/app/_services/members.service';
 import { MessageService } from 'src/app/_services/message.service';
 import { PresenceService } from 'src/app/_services/presence.service';
@@ -13,7 +16,7 @@ import { PresenceService } from 'src/app/_services/presence.service';
   templateUrl: './member-detail.component.html',
   styleUrls: ['./member-detail.component.css']
 })
-export class MemberDetailComponent implements OnInit {
+export class MemberDetailComponent implements OnInit, OnDestroy {
 
   // Tab function related
   // template reference variable
@@ -28,7 +31,14 @@ export class MemberDetailComponent implements OnInit {
   member: Member;
   messages: Message[] = [];
 
-  constructor(public presence: PresenceService, private route: ActivatedRoute, private messageService: MessageService) { }
+  user: User;
+
+  constructor(public presence: PresenceService, private route: ActivatedRoute, private messageService: MessageService, private accountService: AccountService) {
+    this.accountService.currentUser$.pipe(take(1)).subscribe(user => {
+      this.user = user;
+    })
+  }
+
 
   ngOnInit(): void {
     // this.getDrilledUsername();
@@ -55,8 +65,8 @@ export class MemberDetailComponent implements OnInit {
   // }
 
   getDrilledUsername() {
-    let uuname = this.route.snapshot.paramMap.get('username');
-    console.log("Current username: " + uuname);
+    let username = this.route.snapshot.paramMap.get('username');
+    console.log("Current username: " + username);
   }
 
   getImages(): NgxGalleryImage[] {
@@ -93,6 +103,10 @@ export class MemberDetailComponent implements OnInit {
   // message tab related
 
   // Get message thread from service
+  ngOnDestroy(): void {
+    this.messageService.stopHubConnection();
+  }
+
   loadMessageThread() {
     this.messageService.getMessageThread(this.member.username).subscribe(
       response => {
@@ -104,7 +118,10 @@ export class MemberDetailComponent implements OnInit {
   onTabActivated(data: TabDirective) {
     this.activeTab = data;
     if (this.activeTab.heading === "Messages" && this.messages.length === 0) {
-      this.loadMessageThread();
+      this.messageService.createHubConnection(this.user, this.member.username);
+    }
+    else {
+      this.messageService.stopHubConnection();
     }
   }
 
@@ -113,7 +130,6 @@ export class MemberDetailComponent implements OnInit {
   }
 
   selectTabByParams() {
-
     // select tab based on query params
     this.route.queryParams.subscribe(
       params => {

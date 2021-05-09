@@ -1,5 +1,6 @@
 import { Component, Input, OnInit, ViewChild } from '@angular/core';
 import { NgForm } from '@angular/forms';
+import { take } from 'rxjs/operators';
 import { Member } from 'src/app/_models/member';
 import { Message } from 'src/app/_models/message';
 import { MessageService } from 'src/app/_services/message.service';
@@ -11,22 +12,25 @@ import { MessageService } from 'src/app/_services/message.service';
 })
 export class MemberMessageThreadComponent implements OnInit {
   // Inputs
-  @Input() messages: Message[];
+  messages: Message[];
   @Input() targetUsername: string;
 
   // Outputs
   messageContent: string;
   @ViewChild('messageForm') messageForm: NgForm;
 
-  constructor(private messageService: MessageService) { }
+  constructor(public messageService: MessageService) { }
 
-  ngOnInit(): void {}
+  ngOnInit(): void {
+    // this.messageService.messageThread$.pipe(take(1)).subscribe(messages => {
+    //   this.messages = messages;
+    // });
+  }
 
   // Basic CRUD methods:
   sendMessage() {
-    this.messageService.sendMessage(this.targetUsername, this.messageContent).subscribe(
-      message => {
-        this.messages.push(message);
+    this.messageService.sendMessage(this.targetUsername, this.messageContent).then(
+      () => {
         this.messageForm.reset();
       }
     )

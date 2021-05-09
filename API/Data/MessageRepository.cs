@@ -22,6 +22,39 @@ namespace API.Data
             _context = context;
         }
 
+        public void AddGroup(Group group)
+        {
+            _context.Groups.Add(group);
+        }
+
+        public async Task<Group> GetGroupAsync(string groupName)
+        {
+            return await _context.Groups
+                .Include(g => g.Connections)
+                .SingleOrDefaultAsync(g => g.Name == groupName);
+        }
+
+        public async Task<Group> GetGroupForConnectionAsync(string connectionId)
+        {
+            return await _context.Groups
+                .Include(g => g.Connections)
+                .SingleOrDefaultAsync(g =>
+                    g.Connections.Any(conn => conn.ConnectionId == connectionId)
+                );
+        }
+
+        public void RemoveConnection(Connection connection)
+        {
+            _context.Connections.Remove(connection);
+        }
+
+        public async Task<Connection> GetConnectionAsync(string connectionId)
+        {
+            return await _context.Connections.FindAsync(connectionId);
+        }
+
+
+
         // Create basic
         public void AddMessage(Message message)
         {
@@ -33,6 +66,8 @@ namespace API.Data
         {
             _context.Messages.Remove(message);
         }
+
+
 
         // Read basic
         public async Task<Message> GetMessage(int id)
@@ -54,23 +89,23 @@ namespace API.Data
             switch (messageParams.Container)
             {
                 case "Inbox":
-                    messageQuery = messageQuery.Where(m => 
+                    messageQuery = messageQuery.Where(m =>
                         m.RecipientUsername == messageParams.CurrentUsername
                         && m.RecipientDeleted == false
                     );
                     break;
-                
+
                 case "Outbox":
-                    messageQuery = messageQuery.Where(m => 
+                    messageQuery = messageQuery.Where(m =>
                         m.SenderUsername == messageParams.CurrentUsername
                         && m.SenderDeleted == false
                     );
                     break;
 
                 default:
-                // Unread
-                    messageQuery = messageQuery.Where(m => 
-                        m.RecipientUsername == messageParams.CurrentUsername 
+                    // Unread
+                    messageQuery = messageQuery.Where(m =>
+                        m.RecipientUsername == messageParams.CurrentUsername
                         && m.DateTimeRead == null
                         && m.RecipientDeleted == false
                     );
@@ -82,9 +117,9 @@ namespace API.Data
 
             // create paged list
             return await PagedList<MessageDto>.CreateAsync(messageDtos, messageParams.PageNumber, messageParams.PageSize);
-            
+
         }
-      
+
         // Read message thread, to support fuctionality
         public async Task<IEnumerable<MessageDto>> GetMessageThread(string currentUsername, string recipientUsername)
         {
@@ -92,25 +127,25 @@ namespace API.Data
             var messages = await _context.Messages
                 .Include(m => m.Sender).ThenInclude(s => s.Photos)
                 .Include(m => m.Recipient).ThenInclude(r => r.Photos)
-                .Where( m =>
-                    // current use is sender
-                    m.Sender.UserName == currentUsername && m.Recipient.UserName == recipientUsername
-                    && m.SenderDeleted == false
-                    ||
-                    // current user is recipient
-                    m.Recipient.UserName == currentUsername && m.Sender.UserName == recipientUsername
-                    && m.RecipientDeleted == false
+                .Where(m =>
+                   // current use is sender
+                   m.Sender.UserName == currentUsername && m.Recipient.UserName == recipientUsername
+                   && m.SenderDeleted == false
+                   ||
+                   // current user is recipient
+                   m.Recipient.UserName == currentUsername && m.Sender.UserName == recipientUsername
+                   && m.RecipientDeleted == false
                 )
                 .OrderBy(m => m.DateTimeSent)
                 .ToListAsync();
-            
+
             // 2. mark Unread to Read, and save back to DB
             var unreadMessages = messages
-                .Where(m => 
+                .Where(m =>
                     m.Recipient.UserName == currentUsername && m.DateTimeRead == null
                 )
                 .ToList();
-            
+
             if (unreadMessages.Any())
             {
                 foreach (var msg in unreadMessages)
@@ -127,9 +162,13 @@ namespace API.Data
 
         }
 
+
+
         public async Task<bool> SaveAllAsync()
         {
             return await _context.SaveChangesAsync() > 0;
         }
+
+
     }
 }

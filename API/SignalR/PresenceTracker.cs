@@ -8,10 +8,11 @@ namespace API.SignalR
 {
     public class PresenceTracker
     {
-        private static readonly Dictionary<string, HashSet<string>> OnlineUsers = new Dictionary<string, HashSet<string>>();
+        private static readonly Dictionary<string, List<string>> OnlineUsers = new Dictionary<string, List<string>>();
 
-        public Task UserConnected(string username, string connectionId)
+        public Task<bool> UserConnected(string username, string connectionId)
         {
+            bool firstOnline = false;
             lock (OnlineUsers)
             {
                 if (OnlineUsers.ContainsKey(username))
@@ -20,21 +21,23 @@ namespace API.SignalR
                 }
                 else
                 {
-                    OnlineUsers.Add(username, new HashSet<string> { connectionId });
+                    OnlineUsers.Add(username, new List<string> { connectionId });
+                    firstOnline = true;
                 }
             }
 
 
-            return Task.CompletedTask;
+            return Task.FromResult(firstOnline);
         }
 
-        public Task UserDisconnected(string username, string connectionId)
+        public Task<bool> UserDisconnected(string username, string connectionId)
         {
+            bool totallyOffline = false;
             lock (OnlineUsers)
             {
                 if (!OnlineUsers.ContainsKey(username))
                 {
-                    return Task.CompletedTask;
+                    return Task.FromResult(totallyOffline);
                 }
 
                 OnlineUsers[username].Remove(connectionId);
@@ -42,10 +45,11 @@ namespace API.SignalR
                 if (OnlineUsers[username].Count == 0)
                 {
                     OnlineUsers.Remove(username);
+                    totallyOffline = true;
                 }
             }
 
-            return Task.CompletedTask;
+            return Task.FromResult(totallyOffline);
         }
 
         public Task<string[]> GetOnlineUsers()
@@ -59,6 +63,16 @@ namespace API.SignalR
             return Task.FromResult(onlineUsers);
         }
 
+        public Task<List<string>> GetConnectionsForUser(string username)
+        {
+            List<string> connectionIds;
+            lock (OnlineUsers)
+            {
+                connectionIds = OnlineUsers.GetValueOrDefault(username);
+            }
+
+            return Task.FromResult(connectionIds);
+        }
 
     }
 }

@@ -14,14 +14,13 @@ namespace API.Controllers
     [Authorize]
     public class MessagesController : BaseApiController
     {
-        private readonly IUserRepository _userRepository;
-        private readonly IMessageRepository _messageRepository;
+        private readonly IUnitOfWork _unitOfWork;
+
         private readonly IMapper _mapper;
-        public MessagesController(IUserRepository userRepository, IMessageRepository messageRepository, IMapper mapper)
+        public MessagesController(IUnitOfWork unitOfWork, IMapper mapper)
         {
+            _unitOfWork = unitOfWork;
             _mapper = mapper;
-            _messageRepository = messageRepository;
-            _userRepository = userRepository;
         }
 
         // Create
@@ -35,8 +34,8 @@ namespace API.Controllers
             }
 
             // 1. transfer CreateMessageDto to Message
-            var currentUser = await _userRepository.GetUserByUsernameAsync(currentUsername);
-            var recipientUser = await _userRepository.GetUserByUsernameAsync(createMessageDto.RecipientUsername.ToLower());
+            var currentUser = await _unitOfWork.UserRepository.GetUserByUsernameAsync(currentUsername);
+            var recipientUser = await _unitOfWork.UserRepository.GetUserByUsernameAsync(createMessageDto.RecipientUsername.ToLower());
 
             if (recipientUser == null)
             {
@@ -44,7 +43,7 @@ namespace API.Controllers
             }
 
             var message = new Message
-            {   
+            {
                 SenderUsername = currentUsername,
                 Sender = currentUser,
 
@@ -55,10 +54,10 @@ namespace API.Controllers
             };
 
             // 2. Save transferred Message to MessageRepo
-            _messageRepository.AddMessage(message);
+            _unitOfWork.MessageRepository.AddMessage(message);
 
             // 3. Return created MessageDto
-            if (await _messageRepository.SaveAllAsync())
+            if (await _unitOfWork.Complete())
             {
                 return Ok(_mapper.Map<MessageDto>(message));
             }
@@ -74,7 +73,7 @@ namespace API.Controllers
             // add value to parameter property
             messageParams.CurrentUsername = User.GetUsername();
             // get messages from Message Repo, based on constructed Params
-            var paged_messages = await _messageRepository.GetMessagesForCurrentUser(messageParams);
+            var paged_messages = await _unitOfWork.MessageRepository.GetMessagesForCurrentUser(messageParams);
 
             // add pagination info to http response header, based on PagedList<MessageDto> from Repo
             Response.AddPaginationHeader(paged_messages.CurrentPage, paged_messages.PageSize, paged_messages.TotalCount, paged_messages.TotalPages);
@@ -86,15 +85,15 @@ namespace API.Controllers
         [HttpGet("thread/{otherusername}")]
         public async Task<ActionResult<IEnumerable<MessageDto>>> GetMessageThread(string otherusername)
         {
-            var otherUser = await _userRepository.GetUserByUsernameAsync(otherusername);
+            var otherUser = await _unitOfWork.UserRepository.GetUserByUsernameAsync(otherusername);
             if (otherUser == null)
             {
                 return NotFound();
             }
 
             var currentUsername = User.GetUsername();
-            
-            var messages = await _messageRepository.GetMessageThread(currentUsername, otherusername);
+
+            var messages = await _unitOfWork.MessageRepository.GetMessageThread(currentUsername, otherusername);
 
             return Ok(messages);
         }
@@ -103,7 +102,7 @@ namespace API.Controllers
         [HttpDelete("{id}")]
         public async Task<ActionResult> DeleteMessage(int id)
         {
-            var message = await _messageRepository.GetMessage(id);
+            var message = await _unitOfWork.MessageRepository.GetMessage(id);
             var currentUsername = User.GetUsername();
 
             if (message.Sender.UserName != currentUsername && message.Recipient.UserName != currentUsername)
@@ -125,10 +124,10 @@ namespace API.Controllers
 
             if (message.SenderDeleted && message.RecipientDeleted)
             {
-                _messageRepository.DeleteMessage(message);
+                _unitOfWork.MessageRepository.DeleteMessage(message);
             }
 
-            if (await _messageRepository.SaveAllAsync())
+            if (await _unitOfWork.Complete())
             {
                 return Ok();
             }

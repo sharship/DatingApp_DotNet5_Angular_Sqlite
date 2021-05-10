@@ -152,9 +152,6 @@ namespace API.Data
                 {
                     msg.DateTimeRead = DateTime.UtcNow;
                 }
-
-                // save back to DB
-                await _context.SaveChangesAsync();
             }
 
             // 3. project and return all conversation messages
@@ -162,12 +159,6 @@ namespace API.Data
 
         }
 
-
-
-        public async Task<bool> SaveAllAsync()
-        {
-            return await _context.SaveChangesAsync() > 0;
-        }
 
 
     }

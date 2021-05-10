@@ -13,12 +13,11 @@ namespace API.Controllers
     [Authorize]
     public class LikesController : BaseApiController
     {
-        private readonly ILikesRepository _likesrepository;
-        private readonly IUserRepository _userRepository;
-        public LikesController(IUserRepository userRepository, ILikesRepository likesrepository)
+
+        private readonly IUnitOfWork _unitOfWork;
+        public LikesController(IUnitOfWork unitOfWork)
         {
-            _userRepository = userRepository;
-            _likesrepository = likesrepository;
+            _unitOfWork = unitOfWork;
         }
 
         [HttpPost("{followingName}")]
@@ -26,9 +25,9 @@ namespace API.Controllers
         {
 
             var sourceUserId = User.GetUserId();
-            var sourceUser = await _likesrepository.GetUserWithLikes(sourceUserId);
+            var sourceUser = await _unitOfWork.LikesRepository.GetUserWithLikes(sourceUserId);
 
-            var followingUser = await _userRepository.GetUserByUsernameAsync(followingName);
+            var followingUser = await _unitOfWork.UserRepository.GetUserByUsernameAsync(followingName);
 
 
             if (followingUser == null)
@@ -42,7 +41,7 @@ namespace API.Controllers
             }
 
 
-            var existingUserLike = await _likesrepository.GetUserLike(sourceUserId, followingUser.Id);
+            var existingUserLike = await _unitOfWork.LikesRepository.GetUserLike(sourceUserId, followingUser.Id);
             if (existingUserLike != null)
             {
                 return BadRequest("You already followed this user.");
@@ -57,7 +56,7 @@ namespace API.Controllers
 
             sourceUser.Followings.Add(userLike);
 
-            if (await _userRepository.SaveAllAsync())
+            if (await _unitOfWork.Complete())
             {
                 return Ok();
             }
@@ -68,10 +67,10 @@ namespace API.Controllers
 
         // get login user's followings or followers based on predicate
         [HttpGet]
-        public async Task<ActionResult<IEnumerable<LikeDto>>> GetUserLikes([FromQuery]LikesParams likesParams)
+        public async Task<ActionResult<IEnumerable<LikeDto>>> GetUserLikes([FromQuery] LikesParams likesParams)
         {
             likesParams.UserId = User.GetUserId();
-            var users = await _likesrepository.GetUserLikes(likesParams);
+            var users = await _unitOfWork.LikesRepository.GetUserLikes(likesParams);
 
             Response.AddPaginationHeader(users.CurrentPage, users.PageSize, users.TotalCount, users.TotalPages);
 

@@ -1,3 +1,4 @@
+using System;
 using System.Linq;
 using API.DTOs;
 using API.Entities;
@@ -10,6 +11,7 @@ namespace API.Helpers
     {
         public AutoMapperProfiles()
         {
+            // Member
             CreateMap<MemberUpdateDto, AppUser>();
             CreateMap<AppUser, MemberDto>()
                 .ForMember(
@@ -42,6 +44,8 @@ namespace API.Helpers
                         src => src.Recipient.Photos.FirstOrDefault(p => p.IsMain).Url
                     )
                 );
+            
+            CreateMap<DateTime, DateTime>().ConvertUsing(d => DateTime.SpecifyKind(d, DateTimeKind.Utc));
         }
     }
 }

@@ -150,7 +150,7 @@ namespace API.Data
             {
                 foreach (var msg in unreadMessages)
                 {
-                    msg.DateTimeRead = DateTime.Now;
+                    msg.DateTimeRead = DateTime.UtcNow;
                 }
 
                 // save back to DB

@@ -84,6 +84,7 @@ namespace API.Data
             // get IQueryable<Message>
             var messageQuery = _context.Messages
                 .OrderByDescending(m => m.DateTimeSent)
+                .ProjectTo<MessageDto>(_mapper.ConfigurationProvider)
                 .AsQueryable();
 
             switch (messageParams.Container)
@@ -112,21 +113,16 @@ namespace API.Data
                     break;
             };
 
-            // execute IQueryable<Message>, and then project to IQueryable<MessageDto>
-            var messageDtos = messageQuery.ProjectTo<MessageDto>(_mapper.ConfigurationProvider);
-
             // create paged list
-            return await PagedList<MessageDto>.CreateAsync(messageDtos, messageParams.PageNumber, messageParams.PageSize);
+            return await PagedList<MessageDto>.CreateAsync(messageQuery, messageParams.PageNumber, messageParams.PageSize);
 
         }
 
         // Read message thread, to support fuctionality
         public async Task<IEnumerable<MessageDto>> GetMessageThread(string currentUsername, string recipientUsername)
         {
-            // 1. get messages from both sides of conversation
+            // 1. get messages from both sides of conversation, and then project to messageDto
             var messages = await _context.Messages
-                .Include(m => m.Sender).ThenInclude(s => s.Photos)
-                .Include(m => m.Recipient).ThenInclude(r => r.Photos)
                 .Where(m =>
                    // current use is sender
                    m.Sender.UserName == currentUsername && m.Recipient.UserName == recipientUsername
@@ -137,12 +133,13 @@ namespace API.Data
                    && m.RecipientDeleted == false
                 )
                 .OrderBy(m => m.DateTimeSent)
+                .ProjectTo<MessageDto>(_mapper.ConfigurationProvider)
                 .ToListAsync();
 
             // 2. mark Unread to Read, and save back to DB
             var unreadMessages = messages
                 .Where(m =>
-                    m.Recipient.UserName == currentUsername && m.DateTimeRead == null
+                    m.RecipientUsername == currentUsername && m.DateTimeRead == null
                 )
                 .ToList();
 
@@ -154,8 +151,7 @@ namespace API.Data
                 }
             }
 
-            // 3. project and return all conversation messages
-            return _mapper.Map<IEnumerable<MessageDto>>(messages);
+            return messages;
 
         }
 

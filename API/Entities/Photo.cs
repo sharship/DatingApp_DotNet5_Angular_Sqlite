@@ -10,6 +10,10 @@ namespace API.Entities
         public bool IsMain { get; set; }
         public string PublicId { get; set; } // public Id created and returned by Cloudinary after uploading
 
+        public bool IsApproved { get; set; }
+        
+        
+
         public AppUser AppUser { get; set; }
         public int AppUserId { get; set; }
     }

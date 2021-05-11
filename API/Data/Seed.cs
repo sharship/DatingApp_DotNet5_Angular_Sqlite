@@ -1,3 +1,4 @@
+using System.Linq;
 using System;
 using System.Collections.Generic;
 using System.Text.Json;
@@ -47,6 +48,9 @@ namespace API.Data
 
                 // add current user to named role
                 await userManager.AddToRoleAsync(user, "Member");
+
+                // set initial photo as approved for seeded users
+                user.Photos.ToList().ForEach(p => p.IsApproved = true);
             }
 
             #endregion

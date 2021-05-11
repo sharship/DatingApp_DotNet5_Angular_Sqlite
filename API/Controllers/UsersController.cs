@@ -95,15 +95,11 @@ namespace API.Controllers
             var photo = new Photo
             {
                 Url = result.SecureUrl.AbsoluteUri,
-                PublicId = result.PublicId
+                PublicId = result.PublicId,
+                IsApproved = false
             };
 
             var user = await _unitOfWork.UserRepository.GetUserByUsernameAsync(User.GetUsername());
-
-            if (user.Photos.Count == 0)
-            {
-                photo.IsMain = true;
-            }
 
             // bundle User and Phote Model together
             user.Photos.Add(photo);
@@ -158,10 +154,8 @@ namespace API.Controllers
         [HttpGet("{username}", Name = "GetUserByUsername")]
         public async Task<ActionResult<MemberDto>> GetUserByUsername(string username)
         {
-            // var user = await _unitOfWork.UserRepository.GetUserByUsernameAsync(username);
-            // return _mapper.Map<MemberDto>(user);
-
-            return await _unitOfWork.UserRepository.GetMemberByUsernameAsync(username);
+            var currentUsername = User.GetUsername();
+            return await _unitOfWork.UserRepository.GetMemberByUsernameAsync(username, isCurrentUser: currentUsername == username);
         }
     }
 }

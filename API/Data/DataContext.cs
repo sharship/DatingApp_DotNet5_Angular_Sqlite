@@ -33,7 +33,9 @@ namespace API.Data
 
         public DbSet<Connection> Connections { get; set; }
 
-
+        public DbSet<Photo> Photos { get; set; }
+        
+        
 
         protected override void OnModelCreating(ModelBuilder builder)
         {
@@ -95,6 +97,8 @@ namespace API.Data
                 .OnDelete(DeleteBehavior.Restrict);
 
             #endregion
+
+            builder.Entity<Photo>().HasQueryFilter(p => p.IsApproved);
 
             builder.ApplyUtcDateTimeConverter();
 

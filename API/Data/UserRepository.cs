@@ -27,22 +27,20 @@ namespace API.Data
 
         }
 
-        public async Task<MemberDto> GetMemberByUsernameAsync(string username)
+        public async Task<MemberDto> GetMemberByUsernameAsync(string username, bool isCurrentUser)
         {
-            // return await _context.Users
-            //     .Where<AppUser>(u => u.UserName == username)
-            //     .Select(
-            //         user => new MemberDto
-            //         {
-            //             // Without AutoMapper, manual mapping goest here...
-            //         }
-            //     )
-            //     .SingleOrDefaultAsync();
-
-            return await _context.Users
+            var query = _context.Users
                 .Where<AppUser>(u => u.UserName == username)
-                .ProjectTo<MemberDto>(_mapper.ConfigurationProvider) // in this way, we use mapper in repository, instead of controller, and needn't query unnecessary columns from DB Context
-                .SingleOrDefaultAsync();
+                // .Include(u => u.Photos.Where(p => p.IsApproved))
+                .ProjectTo<MemberDto>(_mapper.ConfigurationProvider)
+                .AsQueryable();
+            
+            if (isCurrentUser)
+            {
+                query = query.IgnoreQueryFilters();
+            }
+
+            return await query.SingleOrDefaultAsync();
         }
 
         public async Task<PagedList<MemberDto>> GetMembersAsync(UserParams userParams)
@@ -76,6 +74,15 @@ namespace API.Data
         {
             return await _context.Users
                 .FindAsync(id);
+        }
+
+        public async Task<AppUser> GetUserByPhotoId(int photoId)
+        {
+            return await _context.Users
+                .Include(u => u.Photos)
+                .IgnoreQueryFilters()
+                .Where(u => u.Photos.Any(p => p.Id == photoId))
+                .SingleOrDefaultAsync();
         }
 
         public async Task<AppUser> GetUserByUsernameAsync(string username)

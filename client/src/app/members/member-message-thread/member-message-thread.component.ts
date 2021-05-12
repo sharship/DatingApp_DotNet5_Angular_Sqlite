@@ -19,22 +19,25 @@ export class MemberMessageThreadComponent implements OnInit {
   // Outputs
   messageContent: string;
   @ViewChild('messageForm') messageForm: NgForm;
+  loading: boolean = false;
 
   constructor(public messageService: MessageService) { }
 
   ngOnInit(): void {
-    // this.messageService.messageThread$.pipe(take(1)).subscribe(messages => {
-    //   this.messages = messages;
-    // });
   }
 
   // Basic CRUD methods:
   sendMessage() {
-    this.messageService.sendMessage(this.targetUsername, this.messageContent).then(
-      () => {
+    this.loading = true;
+
+    this.messageService
+      .sendMessage(this.targetUsername, this.messageContent)
+      .then(() => {
         this.messageForm.reset();
-      }
-    )
+      })
+      .finally(() => {
+        this.loading = false;
+      })
   }
 
 
